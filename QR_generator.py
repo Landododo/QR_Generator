@@ -12,7 +12,7 @@ if __name__ == '__main__':
     CHIP_SIZE = [int(sys.argv[2]) for i in range(2)] # um (normalized later)
 LAYER = 1                # Layer to write everything
 
-print 'Desired chip size:  %0.1f x %0.1f um^2'%tuple(CHIP_SIZE)
+print('Desired chip size:  %0.1f x %0.1f um^2'%tuple(CHIP_SIZE))
 
 ## ------------------------------------------------------------------ ##
 ##      QR Global Parameters that change version
@@ -63,8 +63,8 @@ class ABERRATION:
                  [CHIP_SIZE[0]/2+500/SPACING,CHIP_SIZE[1]/2-500/SPACING],
                  [CHIP_SIZE[0]/2+500/SPACING,CHIP_SIZE[1]/2+500/SPACING]] # Normalized, also integer math, so floor.
 
-print 'Using chip size:    %0.1f x %0.1f um^2'%tuple([d*SPACING for d in CHIP_SIZE])
-print 'Using Cross offset: %0.1f um'%(CROSS.offset*SPACING)
+print('Using chip size:    %0.1f x %0.1f um^2'%tuple([d*SPACING for d in CHIP_SIZE]))
+print('Using Cross offset: %0.1f um'%(CROSS.offset*SPACING))
 assert max(CHIP_SIZE)<=2**8, '8 Bits cannot encode given chip size. Limited to %0.1f um.'%((2**8)*SPACING)
 ## ------------------------------------------------------------------ ##
 ##      BIT (Module) Cell Type (cell type should encode all parameters used)
@@ -244,7 +244,7 @@ def main():
     count = 0
     msg = 'Forming QR codes:'.ljust(2*s+2,' ')
     msg += '|'
-    print msg
+    print(msg)
 
     basic = basic_qr()
     bit = eval(MODULE_TYPE)
@@ -252,12 +252,12 @@ def main():
     for row in xrange(nrows):
         for col in xrange(ncols):
             if not count%(nrows*ncols/s):
-                print '*',
+                print('*',)
                 sys.stdout.flush()
             count += 1
             if QRgrid[col][row]:
                 make_qr(qr,basic,bit,row,col)
-    print '*'
+    print('*')
 
 def class2dict(c):
     out = c.__dict__
@@ -267,7 +267,7 @@ def class2dict(c):
     return out
 
 def makeConfigFile(path):
-    print 'Creating new Version config file.'
+    print('Creating new Version config file.')
     params = {'ENCODING':class2dict(ENCODING),
               'CROSS':class2dict(CROSS),
               'ABERRATION':class2dict(ABERRATION),
@@ -282,7 +282,7 @@ def makeConfigFile(path):
               'COMMENTS':COMMENTS}
     with open(os.path.join(path,CONFIG_FNAME),'w') as f:
         json.dump(params,f)
-    print 'Pushing to remote repo...',
+    print('Pushing to remote repo...',)
     check_output('git add -A',shell=True)
     check_output('git commit -m "Added new version config file."',shell=True)
     check_output('git push',shell=True)
@@ -311,7 +311,7 @@ if __name__ == '__main__':
             fname = fname + '.gds'
             break
         i += 1
-    print 'Writing file %s...'%fname,
+    print('Writing file %s...'%fname,)
     sys.stdout.flush()
     gdspy.write_gds(os.path.join(path,fname), unit=1.0e-6, precision=1.0e-9)
-    print 'Done.'
+    print('Done.')
