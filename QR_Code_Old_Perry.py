@@ -98,8 +98,8 @@ def grid(num_lines):
     for i in range(num_lines):
         corner = float(spacing)*i + start
         h_line = gdspy.Rectangle((start, corner), (stop, corner+w), layer=LAYER)
-        block.add(h_line)
         v_line = gdspy.Rectangle((corner, start), (corner+w, stop), layer=LAYER)
+        block.add((h_line, v_line))
     return block
 
 def basic_qr():
@@ -265,7 +265,7 @@ if __name__ == '__main__':
     fname = fnameBase
     while True:
         if i:
-            fname = f"{fnameBase} ({i+1})"
+            fname = f"{fnameBase} ({i})"
         if not os.path.exists(os.path.join(path, fname+'.gds')):
             fname += '.gds'
             break
