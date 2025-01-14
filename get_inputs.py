@@ -8,7 +8,7 @@ def input_data():
     msg = "Enter the specifications of the QR generation. Sizes are in um and should be depicted (length x height). Leave blank if want us to generat data."
     field_names = ["File name", "QR array size", "QR code length", "QR code spacing", "Size of chip"]
     field_values = []
-    field_values = multenterbox(msg,title, field_names)
+    field_values = multenterbox(msg, title, field_names)
     print(field_values)
     array1 = []
     array2 = []
@@ -17,7 +17,7 @@ def input_data():
         if field_values == None:
             field_values = multenterbox("NEED INPUTS", title, field_names, field_values)
         errmsg = ""
-        if field_values[0] == None:
+        if str(field_values[0]).strip() == "":
             errmsg = "File name required"
         count = 0
         for i in range (1,5):
@@ -51,15 +51,19 @@ def input_data():
     
     field_values[1] = array1
     field_values[4] = array2
+    abs_pos = True
+    if not boolbox("Should position be encoded in um or unitless relative to QR size?", "QR units", ["Absolute Position (um)", "Relative Position (QR units)"]):
+        abs_pos = False
+    print(abs_pos)
 
-    if field_values[1] == None:
+    if field_values[1] == []:
         return(field_values[0], field_values[4][0], field_values[4][1], field_values[2], field_values[3])
-    elif field_values[2] == None or field_values[3] == None:
+    elif str(field_values[2]).strip() == "" or str(field_values[3]).strip() == "":
         qrs_per_row = field_values[1][0]
         qrs_per_col = field_values[1][1]
         chip_size_length = field_values[4][0]
         chip_size_height = field_values[4][1]
-        if field_values[2] == None:
+        if str(field_values[2]).strip() == "":
             spacing = field_values[3]
             code_length = min((chip_size_length - (qrs_per_row - 1) * spacing)/qrs_per_row, (chip_size_height - (qrs_per_col - 1) * spacing)/qrs_per_col)
             return (field_values[0], chip_size_length, chip_size_height, code_length, field_values[3])
@@ -75,11 +79,11 @@ def input_data():
             print(spacing)
             print("fucks")
             return (field_values[0], chip_size_length, chip_size_height, code_length, spacing)
-    elif field_values[4] == None:
+    elif field_values[4] == []:
         code_length = field_values[2]
         spacing = field_values[3]
-        length = field_values[1][0] * (code_length + spacing - 1)
-        height = field_values[1][1] * (code_length + spacing - 1)
+        length = field_values[1][0] * (code_length + spacing) - spacing
+        height = field_values[1][1] * (code_length + spacing) - spacing
         return(field_values[0], length, height, code_length, spacing)
     else:
         return(field_values[0], field_values[4][0], field_values[4][1], field_values[2], field_values[3])
