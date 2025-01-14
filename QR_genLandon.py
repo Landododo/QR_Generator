@@ -10,13 +10,14 @@ class ENCODING:
         checksum_bits = 3
         n = 25
 lib = gdspy.GdsLibrary()
+num_modules_long = 5
 
 
 def empty_qr(qr_size):
     # module_size is the bit module in um
     basic_cell = gdspy.Cell('Basic_Cell%i'%(qr_size*10))
     # Primary markers
-    module_size = qr_size / 5
+    module_size = qr_size / num_modules_long
     leg = ENCODING.n**0.5*module_size + 2 * offset
     primary_r = module_size / 1.5
     secondary_r = module_size / 4
@@ -43,7 +44,7 @@ def make_grid(qrs_in_row, qrs_in_col, qr, rel_spacing, qr_size):
 
     QRgrid = numpy.array([[1 for i in range(qrs_in_row)] for j in range(qrs_in_col)])
     basic_cell = empty_qr(qr_size) #the basic empty qr cell
-    individual_cell = grid(3, qr_size /50) #each qr module
+    individual_cell = grid(3, reduction) #each qr module
     for row in range(qrs_in_row):
         for col in range(qrs_in_col):
             if QRgrid[row][col]:
@@ -69,7 +70,7 @@ def make_qr(qr, row, col, empty_qr, rel_spacing, qr_size, individual_cell):
     data = encode(row, col) #encode the row and column into the information to be included in the QR code
     if type(data)==str:
         data = [int(c) for c in data]
-    origin = (col * (rel_spacing + 1) * qr_size, row * (rel_spacing + 1) * qr_size) # (rel spacing +1) *qr size bc spacing between qr codes is more
+    origin = (col * (rel_spacing + 1) * qr_size + padding, row * (rel_spacing + 1) * qr_size + padding) # (rel spacing +1) *qr size bc spacing between qr codes is more
     data = numpy.reshape(data,(int(len(data)**0.5),-1)) #reshape data into a square
     n = int(ENCODING.n**0.5)
     qr.add(gdspy.CellReference(empty_qr,origin))
@@ -85,12 +86,13 @@ def make_qr(qr, row, col, empty_qr, rel_spacing, qr_size, individual_cell):
                pos[1] += offset + origin[1]
                qr.add(gdspy.CellReference(individual_cell, pos))
     # Creates text for the row and column of the QR code
-    height = 2 * module_size
-    leg = ENCODING.n**0.5*module_size + 2 * offset
-    primary_r = module_size / 1.5
-    row = gdspy.Text(str(row),height,(offset+origin[0],leg-primary_r/2.0+origin[1]),layer=1)
-    col = gdspy.Text(str(col),height,(leg-primary_r/2.0+height+origin[0],offset+origin[1]),angle=numpy.pi/2,layer=1)
-    qr.add([row,col])
+    if hum_text:
+        height = 2 * module_size
+        leg = ENCODING.n**0.5*module_size + 2 * offset
+        primary_r = module_size / 1.5
+        row = gdspy.Text(str(row),height,(offset+origin[0],leg-primary_r/2.0+origin[1]),layer=1)
+        col = gdspy.Text(str(col),height,(leg-primary_r/2.0+height+origin[0],offset+origin[1]),angle=numpy.pi/2,layer=1)
+        qr.add([row,col])
 
 def grid(num_lines, reduction):
     """Generates a module with a reduction layer on the outside"""
@@ -114,13 +116,16 @@ def main():
     # creates a new cell objet in the lib library
     qr = lib.new_cell("QR")
 
-    name, length, height, qr_size, spacing = input_data()
+    name, length, height, qr_size, spacing, abs_pos = input_data()
     print(name, length, height, qr_size, spacing)
+    global padding, hum_text, reduction, precision
+    padding, hum_text, reduction, precision = default_overides(qr_size)
+    print(padding, hum_text, reduction, precision)
 
-    module_size = qr_size / 5 # 5x5 modules in normal data
+    module_size = qr_size / num_modules_long # 5x5 modules in normal data
     offset = module_size + .5 # size of module + a small amount for offset
-    qrs_in_row = int((length + spacing) / (qr_size + spacing))
-    qrs_in_col = int((height + spacing) / (qr_size + spacing))
+    qrs_in_row = int((length + spacing - 2 * padding) / (qr_size + spacing))
+    qrs_in_col = int((height + spacing - 2 * padding) / (qr_size + spacing))
     rel_spacing = float(spacing / qr_size)
     print(rel_spacing)
     make_grid(qrs_in_row, qrs_in_col, qr, rel_spacing, qr_size)
@@ -142,7 +147,7 @@ def main():
 
     print('Writing file %s...'%fname,)
     sys.stdout.flush()
-    gdspy.write_gds(os.path.join(path,fname), unit=1.0e-6, precision=1.0e-9)
+    gdspy.write_gds(os.path.join(path,fname), unit=1.0e-6, precision=precision * 1.0e-6)
     print('Done.')
 
 if __name__ == '__main__':

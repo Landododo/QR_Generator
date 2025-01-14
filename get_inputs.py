@@ -52,12 +52,13 @@ def input_data():
     field_values[1] = array1
     field_values[4] = array2
     abs_pos = True
+    # boolean question to determine type of information to be encoded in QR codes
     if not boolbox("Should position be encoded in um or unitless relative to QR size?", "QR units", ["Absolute Position (um)", "Relative Position (QR units)"]):
         abs_pos = False
     print(abs_pos)
 
     if field_values[1] == []:
-        return(field_values[0], field_values[4][0], field_values[4][1], field_values[2], field_values[3])
+        return(field_values[0], field_values[4][0], field_values[4][1], field_values[2], field_values[3], abs_pos)
     elif str(field_values[2]).strip() == "" or str(field_values[3]).strip() == "":
         qrs_per_row = field_values[1][0]
         qrs_per_col = field_values[1][1]
@@ -66,7 +67,7 @@ def input_data():
         if str(field_values[2]).strip() == "":
             spacing = field_values[3]
             code_length = min((chip_size_length - (qrs_per_row - 1) * spacing)/qrs_per_row, (chip_size_height - (qrs_per_col - 1) * spacing)/qrs_per_col)
-            return (field_values[0], chip_size_length, chip_size_height, code_length, field_values[3])
+            return (field_values[0], chip_size_length, chip_size_height, code_length, field_values[3],abs_pos)
         else:
             code_length = field_values[2]
             spacing = 0
@@ -78,15 +79,42 @@ def input_data():
                 spacing = (chip_size_length - qrs_per_row * code_length) / (qrs_per_row - 1)
             print(spacing)
             print("fucks")
-            return (field_values[0], chip_size_length, chip_size_height, code_length, spacing)
+            return (field_values[0], chip_size_length, chip_size_height, code_length, spacing, abs_pos)
     elif field_values[4] == []:
         code_length = field_values[2]
         spacing = field_values[3]
         length = field_values[1][0] * (code_length + spacing) - spacing
         height = field_values[1][1] * (code_length + spacing) - spacing
-        return(field_values[0], length, height, code_length, spacing)
+        return(field_values[0], length, height, code_length, spacing, abs_pos)
     else:
-        return(field_values[0], field_values[4][0], field_values[4][1], field_values[2], field_values[3])
+        return(field_values[0], field_values[4][0], field_values[4][1], field_values[2], field_values[3],abs_pos)
+
+def default_overides(qr_size):
+    title = "Default overrides"
+    msg = "These values are filled with default values but can be changed if wanted."
+    field_names = ["Outer Padding (um)", "Human Text (Y/N)", "Reduction around each module(um)", "Write Precision (um)"]
+    field_values = [0.1, "Y", qr_size / 50, .001]
+    field_values = multenterbox(msg, title, field_names, field_values)
+    while True:
+        if field_values == None:
+            field_values = multenterbox("NEED INPUTS", title, field_names, field_values)
+        errmsg = ""
+        field_values[0], field_values[2], field_values[3] = float(field_values[0]), float(field_values[2]), float(field_values[3])
+        if float(field_values[0]) < 0:
+            errmsg = errmsg + "Need padding greater than 0"
+        if len(field_values[1]) > 1:
+             errmsg = errmsg + "Need Y/N for human text"
+        if float(field_values[2]) < 0:
+            errmsg = errmsg + "Need reduction greater than 0"
+        if float(field_values[3]) < 0:
+            errmsg = errmsg + "Need precision greater than 0"
+        if errmsg == "":
+            break
+        field_values = multenterbox(errmsg, title, field_names, field_values)
+    return (field_values[0], field_values[1].upper() == "Y", field_values[2], field_values[3])
+
+
+
 
 
         
