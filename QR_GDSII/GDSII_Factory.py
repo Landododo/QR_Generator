@@ -16,7 +16,7 @@ class GDSIIFactory(BaseImage):
     needs_processing = True
     cell_id = 0
 
-    def __init__(self, border, width, _, layer=1, reduction=0, cell_name="QR", library=None, gdsii_box_size=None, **kwargs):
+    def __init__(self, border, width, _, layer=1, reduction=0, cell_name="QR", library=None, gdsii_box_size=None, id_provider=None, **kwargs):
         self.bg: gdspy.Polygon = None
         self.library = library
             # raise ValueError("GDSII library must be provided as a keyword argument")
@@ -24,9 +24,12 @@ class GDSIIFactory(BaseImage):
         self.layer = layer
         self.negate = None
         self.reduction = reduction
-        self.id = GDSIIFactory.cell_id
         self.result = None
-        GDSIIFactory.cell_id += 1
+        if id_provider is None:
+            GDSIIFactory.cell_id += 1
+            self.id = GDSIIFactory.cell_id
+        else:
+            self.id = id_provider()
 
 
         # qrcode prevents decimal box sizes: hence this little workaround
@@ -41,7 +44,7 @@ class GDSIIFactory(BaseImage):
     def new_image(self):
         self.negate = []
         c = gdspy.Cell(self.cell_name + f"_{self.id}")
-        self.library.add(c, True)
+        #self.library.add(c, True)
         return c
 
     def init_new_image(self):

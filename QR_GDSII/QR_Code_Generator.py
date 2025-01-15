@@ -1,9 +1,11 @@
+from typing import Callable
+
 import gdspy
 from qrcode.main import QRCode
 
-import GDSII_Factory
 import abc
 
+from QR_GDSII.GDSII_Factory import GDSIIFactory
 from util.constants import QRErrorCorrectionLevels, QRCapacitiesToVersions
 from util.units import Measurement
 
@@ -31,7 +33,7 @@ class GDSIIQRGenerator:
             if len(kwarg) < 3:
                 self.default_metadata[kwarg] = str(val)
 
-    def create_gdsii(self, data, layer=1, **meta):
+    def create_gdsii(self, data, layer=1, id_provider: Callable[[None], int]=None, **meta):
 
         data_str = str(data)
         for kwarg, val in self.default_metadata.items():
@@ -63,14 +65,15 @@ class GDSIIQRGenerator:
                     error_correction=self.error_correction.value,
                     box_size=1,
                     border=0,
-                    image_factory=GDSII_Factory.GDSIIFactory)
+                    image_factory=GDSIIFactory)
         qr.add_data(data_str)
         qr_version = qr.best_fit(qr_version)
         return qr.make_image(layer=layer,
                              library=self.library,
                              cell_name="QR",
                              gdsii_box_size=self.qr_code_size / pixel_dimension_from_qr_version(qr_version),
-                             reduction=self.reduction).get_image()
+                             reduction=self.reduction,
+                             id_provider=id_provider).get_image()
 
 
 
