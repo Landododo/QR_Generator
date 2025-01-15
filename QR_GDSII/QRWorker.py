@@ -16,10 +16,11 @@ def get_id():
         shared_counter.value += 1
         return shared_counter.value
 
-def worker_func(x, y, qr_generator, data_format, layer, get_id):
+def worker_func(x, y, qr_generator, data_format, layer, get_id, kwargs):
     return qr_generator.create_gdsii(data_format(x, y),
                                         layer=layer,
-                                        id_provider=get_id), x, y
+                                        id_provider=get_id,
+                                        **kwargs), x, y
 
 
 def default_data_format(x,y):
@@ -32,12 +33,9 @@ def generate_and_place_batch(qr_generator: GDSIIQRGenerator,
                                 coordinate_to_position_func: Callable[[int, int], tuple[float, float]],
                                 x_count: int,
                                 y_count: None,
-                                qr_size: float,
-                                spacing: float,
-                                padding: float,
                                 layer=1,
                                 thread_count = os.cpu_count()//2,
-                                data_format: Callable[[int, int], str] = default_data_format,
+                                data_format: Callable[[float, float], str] = default_data_format,
                                 additional_drawings: AnyCallable = None,
                                 **kwargs
                            ):
@@ -71,13 +69,13 @@ def generate_and_place_batch(qr_generator: GDSIIQRGenerator,
 
     # Parallelize cell generation and placement
     with multiprocessing.Pool(min(thread_count, 1)) as p:
-        for qr_cell, x, y in p.starmap(worker_func, ((x, y, qr_generator, data_format, layer, get_id)
+        for qr_cell, x, y in p.starmap(worker_func, ((x, y, qr_generator, data_format, layer, get_id, kwargs)
                             for y in range(y_count) for x in range(x_count))):
-            bottom_left = coordinate_to_position_func(x, y, qr_size, padding, spacing)
+            bottom_left = coordinate_to_position_func(x, y)
             final_x = bottom_left[0] + qr_generator.reduction
             final_y = bottom_left[1] + qr_generator.reduction
             parent_cell.add(gdspy.CellReference(qr_cell, (final_x, final_y)))
             if additional_drawings is not None:
-                additional_drawings(qr_size, x,y, parent_cell, *bottom_left)
+                additional_drawings(qr_generator.qr_code_size, x,y, parent_cell, *bottom_left)
 
     gdsii_library.add(parent_cell)
