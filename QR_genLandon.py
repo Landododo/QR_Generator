@@ -1,6 +1,12 @@
 import gdspy, numpy, os, json, sys
 from subprocess import check_output
 from get_inputs import *
+from QR_GDSII.QR_Code_Generator import GDSIIQRGenerator
+from QR_GDSII.QRWorker import generate_and_place_batch
+from QR_GDSII.util import units
+from QR_GDSII import QRWorker
+import time
+import math
 
 class ENCODING:
         pad = [0,4]         # Pad(1) bits = 0, 4
@@ -12,6 +18,14 @@ class ENCODING:
 lib = gdspy.GdsLibrary()
 num_modules_long = 5
 
+#add command line arguments and usage note
+def coord_to_pos_basic(x,y):
+    return x*100,y*100
+
+def additional_text(x,y, cell: gdspy.Cell, pos_x, pos_y, **kwargs):
+    x_label = gdspy.Text(str(x), size=10, position=(pos_x, pos_y+55), layer=2, **kwargs)
+    y_label = gdspy.Text(str(y), size=10, position=(pos_x+65, pos_y), angle=math.pi/2, layer=2, **kwargs)
+    cell.add((x_label, y_label))
 
 def empty_qr(qr_size):
     # module_size is the bit module in um
@@ -128,9 +142,22 @@ def main():
     qrs_in_col = int((height + spacing - 2 * padding) / (qr_size + spacing))
     rel_spacing = float(spacing / qr_size)
     print(rel_spacing)
-    make_grid(qrs_in_row, qrs_in_col, qr, rel_spacing, qr_size)
-    # display cell in internal viewer
-    # gdspy.LayoutViewer(library=lib, cells = [qr])
+    # make_grid(qrs_in_row, qrs_in_col, qr, rel_spacing, qr_size)
+    # lib = gdspy.GdsLibrary()
+    measurement = units.Measurement.unitless
+    if abs_pos:
+        measurement = units.Measurement.micrometer
+
+    generator = GDSIIQRGenerator(qr_size,library = lib, unit = measurement, reduction = reduction)
+    start=time.time()
+    print(os.cpu_count())
+    generate_and_place_batch(generator, lib, coord_to_pos_basic, 100, 100,
+                         additional_drawings=additional_text, thread_count=os.cpu_count())
+    print(f"Done generating! Took {time.time()-start:.2f} seconds.")
+    lib.write_gds("test_qr_code_parallel.gds")
+    gdspy.LayoutViewer(lib)
+
+
     path = ''
     i = 0
     fnameBase = name

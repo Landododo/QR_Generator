@@ -4,8 +4,8 @@ import os
 import gdspy
 from qrcode.main import QRCode
 
-from QR_GDSII.QRWorker import generate_and_place_batch
-from QR_GDSII.QR_Code_Generator import GDSIIQRGenerator
+from QRWorker import generate_and_place_batch
+from QR_Code_Generator import GDSIIQRGenerator
 from util.units import Measurement
 import time
 

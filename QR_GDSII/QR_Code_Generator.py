@@ -6,8 +6,8 @@ from qrcode.main import QRCode
 import abc
 
 from QR_GDSII.GDSII_Factory import GDSIIFactory
-from util.constants import QRErrorCorrectionLevels, QRCapacitiesToVersions
-from util.units import Measurement
+from QR_GDSII.util.constants import QRErrorCorrectionLevels, QRCapacitiesToVersions
+from QR_GDSII.util.units import Measurement
 
 # x=100,y=200,U=UL
 
@@ -74,6 +74,5 @@ class GDSIIQRGenerator:
                              gdsii_box_size=self.qr_code_size / pixel_dimension_from_qr_version(qr_version),
                              reduction=self.reduction,
                              id_provider=id_provider).get_image()
-
 
 
