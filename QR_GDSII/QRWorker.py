@@ -31,7 +31,6 @@ def default_data_format(x,y, x_actual, y_actual):
     return f"{x},{y}"
 
 def round_floats(x,y, x_actual, y_actual):
-    print(f"data encoded: {round(x,3)},{round(y,3)}")
     return f"{round(x,3)},{round(y,3)}"
 
 def default_coord_to_pos_behavior(x,y):
@@ -69,7 +68,6 @@ def generate_and_place_batch(qr_generator: GDSIIQRGenerator,
     each QR code.
     :return:
     """
-
     parent_cell = gdspy.Cell("QR_Array_Parent")
     if not y_count:
         y_count = x_count
