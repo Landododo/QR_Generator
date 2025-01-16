@@ -29,23 +29,10 @@ def format_absolute(_, __, x_actual, y_actual):
 global padding, qr_size, spacing
 #add command line arguments and usage note
 def additional_text(qr_size, x,y, cell: gdspy.Cell, pos_x, pos_y, **kwargs):
+    """Creates human text around each qr code"""
     x_label = gdspy.Text(str(x), size=10, position=(pos_x, pos_y+qr_size * 1.05), layer=2, **kwargs)
     y_label = gdspy.Text(str(y), size=10, position=(pos_x+qr_size * 1.05 + 10, pos_y), angle=math.pi/2, layer=2, **kwargs)
     cell.add((x_label, y_label))
-# def coord_to_pos(x,y, padding, qr_size, spacing):
-#         pos_x = padding + (x + 1) * (qr_size + spacing) - spacing
-#         pos_y = padding + (y + 1) * (qr_size + spacing) - spacing
-#         #print(x,y)
-#         #print(pos_x, pos_y)
-#         return pos_x,pos_y
-
-# def coord_to_pos(x,y):
-#         padding,qr_size, spacing = get_data()
-#         pos_x = padding + (x + 1) * (qr_size + spacing) - spacing
-#         pos_y = padding + (y + 1) * (qr_size + spacing) - spacing
-#         #print(x,y)
-#         #print(pos_x, pos_y)
-#         return pos_x,pos_y
 
 def main():
     # size in um of module and offset
@@ -59,26 +46,30 @@ def main():
     name, length, height, qr_size, spacing, abs_pos, no_size, padding, forced_version, error_correction, num_modules_long,precision, reduction, hum_text = (None,None,None,None,None,None,None,None,None,None,None, None,None,None)
     if len(sys.argv) > 1:
         name, length, height, qr_size, spacing, abs_pos, padding, num_modules_long, precision ,hum_text, reduction, ec_level = get_parser_inputs()
-        length, height, num_modules_long = adjust_qr_size_and_padding(length, height, qr_size, padding, False, None, ec_level, abs_pos)
+        qrs_in_row = int(round((length + spacing) / (qr_size + spacing), 5))
+        qrs_in_col = int(round((height + spacing) / (qr_size + spacing), 5))
+        length, height, num_modules_long, spacing = adjust_qr_size_and_padding(length, height, qr_size, padding, False, None, ec_level, abs_pos, qrs_in_row, qrs_in_col, spacing, False)
     else:
-    # generate_and_place_batch(generator, lib, coord_to_pos_basic, 100, 100,
-    #                       additional_drawings=None, thread_count=os.cpu_count())
-    #global qr_size, spacing
-        name, length, height, qr_size, spacing, abs_pos, no_size = input_data()
+        name, length, height, qr_size, spacing, abs_pos, no_size, no_spacing = input_data()
         padding, hum_text, reduction, precision, forced_version, error_correction = default_overides(qr_size)
-        length, height, num_modules_long = adjust_qr_size_and_padding(length, height, qr_size, padding, no_size, forced_version, error_correction, abs_pos)
+        qrs_in_row = int(round((length + spacing) / (qr_size + spacing), 5))
+        qrs_in_col = int(round((height + spacing) / (qr_size + spacing), 5))
+        print(length, height, spacing, padding, qr_size)
+        print(qrs_in_col)
+
+        length, height, num_modules_long, spacing = adjust_qr_size_and_padding(length, height, qr_size, padding, no_size, forced_version, error_correction, abs_pos, qrs_in_row, qrs_in_col, spacing, no_spacing)
     module_size = qr_size / num_modules_long
     lib.precision = 1.0e-6 * precision
     offset = module_size + .5 # size of module + a small amount for offset
-    qrs_in_row = int((length + spacing - 2 * padding) / (qr_size + spacing))
-    qrs_in_col = int((height + spacing - 2 * padding) / (qr_size + spacing))
-    rel_spacing = float(spacing / qr_size)
+    qrs_in_row = int(round((length + spacing - 2 * padding) / (qr_size + spacing),5))
+    qrs_in_col = int(round((height + spacing - 2 * padding) / (qr_size + spacing), 5))
+    print(qrs_in_col)
     def coord_to_pos(x,y):
-        pos_x = padding + (x + 1) * (qr_size + spacing) - spacing
-        pos_y = padding + (y + 1) * (qr_size + spacing) - spacing
+        pos_x = padding + (x) * (qr_size + spacing)
+        pos_y = padding + (y) * (qr_size + spacing)
         return pos_x,pos_y
-    measurement = units.Measurement.unitless
 
+    measurement = units.Measurement.unitless
     format_func = format_relative
 
     if abs_pos:
@@ -87,7 +78,6 @@ def main():
     human_text = None
     if hum_text:
         human_text = additional_text
-    qr = lib.new_cell("QR")
     generator = GDSIIQRGenerator(qr_size,library = lib, unit = measurement, reduction = reduction)
     start=time.time()
     print(os.cpu_count())
@@ -108,9 +98,9 @@ def main():
             break
         i += 1
 
+    # write file
     print('Writing file %s...'%fname,)
     sys.stdout.flush()
-    #gdspy.write_gds(os.path.join(path,fname), unit=1.0e-6, precision=precision * 1.0e-6)
     lib.write_gds(fname)
     print('Done.')
 
