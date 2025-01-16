@@ -85,7 +85,7 @@ class GDSIIFactory(BaseImage):
         y = (row + self.border) * self.box_size - self.reduction
         return (
             (x - self.reduction, y - self.reduction),
-            (x - self.reduction, y + self.box_size - self.reduction),
+            (x - self.reduction, y + self.box_size + self.reduction),
             (x + self.box_size + self.reduction, y + self.box_size + self.reduction),
             (x + self.box_size + self.reduction, y-self.reduction),
         )

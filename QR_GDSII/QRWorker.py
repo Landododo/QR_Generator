@@ -6,7 +6,6 @@ from typing import Callable
 from coverage.types import AnyCallable
 
 from QR_GDSII.QR_Code_Generator import GDSIIQRGenerator
-
 # Must be top level, all context is provided as params
 global_lock = multiprocessing.Lock()
 shared_counter = multiprocessing.Value('i', 0)
@@ -25,6 +24,10 @@ def worker_func(x, y, qr_generator, data_format, layer, get_id):
 def default_data_format(x,y):
     return f"{x},{y}"
 
+def round_floats(x,y):
+    print(f"data encoded: {round(x,3)},{round(y,3)}")
+    return f"{round(x,3)},{round(y,3)}"
+
 
 
 def generate_and_place_batch(qr_generator: GDSIIQRGenerator,
@@ -32,9 +35,6 @@ def generate_and_place_batch(qr_generator: GDSIIQRGenerator,
                                 coordinate_to_position_func: Callable[[int, int], tuple[float, float]],
                                 x_count: int,
                                 y_count: None,
-                                qr_size: float,
-                                spacing: float,
-                                padding: float,
                                 layer=1,
                                 thread_count = os.cpu_count()//2,
                                 data_format: Callable[[int, int], str] = default_data_format,
@@ -73,11 +73,10 @@ def generate_and_place_batch(qr_generator: GDSIIQRGenerator,
     with multiprocessing.Pool(min(thread_count, 1)) as p:
         for qr_cell, x, y in p.starmap(worker_func, ((x, y, qr_generator, data_format, layer, get_id)
                             for y in range(y_count) for x in range(x_count))):
-            bottom_left = coordinate_to_position_func(x, y, qr_size, padding, spacing)
+            bottom_left = coordinate_to_position_func(x, y)
             final_x = bottom_left[0] + qr_generator.reduction
             final_y = bottom_left[1] + qr_generator.reduction
             parent_cell.add(gdspy.CellReference(qr_cell, (final_x, final_y)))
             if additional_drawings is not None:
-                additional_drawings(qr_size, x,y, parent_cell, *bottom_left)
-
+                additional_drawings(qr_generator.qr_code_size, x,y, parent_cell, *bottom_left)
     gdsii_library.add(parent_cell)

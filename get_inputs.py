@@ -1,5 +1,7 @@
 from easygui import *
 from QR_GDSII.util import constants
+import argparse, sys
+
 
 def input_data():
     """Collect all the important input information from the user
@@ -150,19 +152,100 @@ def adjust_qr_size_and_padding(length, height, qr_size, padding, no_size, forced
                 qr_version = forced_version
     return (length, height, qr_version * 4 + 17)
 
+def get_parser_inputs():
+    parser = argparse.ArgumentParser(
+            prog='QR generator',
+            description='Generates a grid of qr codes of a specifized size using user input. Returns a gdsii file'
+            )
+    parser.add_argument('filename',help="name of file to process")
+    parser.add_argument("size of chip", help="size of chip in um, seperated by an x (like 30x30)")
+    parser.add_argument("size of qr code", help = "the size of each individual qr in the grid")
+    parser.add_argument("spacing", help="spacing between qr codes")
+    parser.add_argument('-p', "--padding", help = "Padding around the entire qr grid (um)")
+    parser.add_argument('-pr', "--precision", help = "degree of precision in um for the writing of the QR codes")
+    parser.add_argument('-r',"--reduction", help= "Padding around each qr module (um)")
+    parser.add_argument("-hu", "--human", help="Y or N if you want human numbers around QR codes")
+    parser.add_argument("-a", "--absolute", help = "encode your position absolutely (um) Y or N as answer")        
+    parser.add_argument("-e", "--ec_level", help = "error correction level as H,Q,M or L (high, quality, medium or low)")        
 
-
-        
-
-    print("name for file:")
-    name = str(input())
-    print("length of array in um")
-    length = float(input())
-    print("hieght of array in um")
-    height = float(input())
-    print("dimension of qr codes:")
-    qr_size = float(input())
-    print("spacing between adjacent qr codes:")
-    spacing = float(input())
-    return (field_values)
-    return (name, length, height, qr_size, spacing)
+    args = parser.parse_args()
+    args_dict = vars(args)
+    while True:
+        no_errors= True
+        print(args_dict)
+        if len(args_dict["filename"]) < 1:
+            print("Error: need a filename")
+        elif "x" not in args_dict["size of chip"]:
+            print("u need an x between the length and width (no spaces)")
+        elif len(args_dict["size of chip"].split("x")) != 2:
+            print("u need 2 dimensions on each side of the x")
+        else:
+            sizes = args_dict["size of chip"].split("x")
+            args_dict["size of chip"] = sizes
+            qr_size = float(args_dict["size of qr code"])
+            args_dict["spacing"] = float(args_dict["spacing"])
+            if args.padding != None:
+                try:
+                    padding = float(args.padding)
+                except:
+                    print("Bruh you need to put in a float for the padding")
+                    no_errors = False
+            else:
+                padding = 0.1
+            if args.precision != None:
+                try:
+                    precision = float(args.precision)
+                except:
+                    no_errors=False
+                    print("Bruh you need to put in a float for the padding")
+            else:
+                precision = 0.001
+            if args.reduction != None:
+                try:
+                    reduction = float(args.reduction)
+                except:
+                    no_errors=False
+                    print("Bruh you need to put in a float for the reduction")
+            else:
+                reduction = qr_size/200
+            if args.human != None:
+                if len(args.human) != 1:
+                    no_errors=False
+                    print("there's gotta be only 1 char for human y or n")
+                elif args.human not in "nNyY":
+                    no_errors =False
+                    print("you gotta be y or n")
+                else:
+                    args.human = args.human.lower() == 'y'
+            else:
+                args.human = True
+            if args.ec_level != None:
+                if len(args.ec_level) != 1:
+                    no_errors=False
+                    print("there's gotta be only 1 char for L,M,Q,or H")
+                elif args.ec_level not in "LMQH":
+                    no_errors=False
+                    print("you gotta be L,M,Q, or H")
+                else:
+                    args.ec_level = "M"
+            else:
+                args.ec_level = "M"
+            if args.absolute != None:
+                if len(args.absolute) != 1:
+                    no_errors=False
+                    print("there's gotta be only 1 char for absolute y or n")
+                elif args.absolute not in "nNyY":
+                    no_errors=False
+                    print("gotta be y or n")
+                else:
+                    abs_pos = args.absolute.lower() == 'y'
+                    break
+            else:
+                abs_pos = True
+            if no_errors:
+                break
+        sys.argv = [sys.argv[0]]
+        args = parser.parse_args()
+    name, length, height, spacing = args_dict["filename"], args_dict["size of chip"][0], args_dict["size of chip"][1], args_dict["spacing"]
+    num_modules_long = 21
+    return name, float(length), float(height), float(qr_size), float(spacing), abs_pos, float(padding), num_modules_long, float(precision), args.human,float(reduction), args.ec_level
