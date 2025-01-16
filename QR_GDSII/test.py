@@ -4,10 +4,12 @@ import os
 import gdspy
 from qrcode.main import QRCode
 
-from QRWorker import generate_and_place_batch
-from QR_Code_Generator import GDSIIQRGenerator
-from util.units import Measurement
+from QR_GDSII.QRWorker import generate_and_place_batch
+from QR_GDSII.QR_Code_Generator import GDSIIQRGenerator
 import time
+
+from QR_GDSII.util.units import Measurement
+
 
 def test_basic():
     #50 micrometers
@@ -37,8 +39,11 @@ def test_basic():
 def coord_to_pos_basic(x,y):
     return x*100,y*100
 
+def encode_actual_position(x,y, x_actual, y_actual):
+    return f"{x_actual:.3f},{y_actual:.3f}"
+
 def test_parallelization():
-    def additional_text(x,y, cell: gdspy.Cell, pos_x, pos_y, **kwargs):
+    def additional_text(qr_size, x,y, cell: gdspy.Cell, pos_x, pos_y, **kwargs):
         x_label = gdspy.Text(str(x), size=10, position=(pos_x, pos_y+55), layer=2, **kwargs)
         y_label = gdspy.Text(str(y), size=10, position=(pos_x+65, pos_y), angle=math.pi/2, layer=2, **kwargs)
         cell.add((x_label, y_label))
@@ -46,8 +51,9 @@ def test_parallelization():
     generator = GDSIIQRGenerator(50,lib)
     start=time.time()
     print(os.cpu_count())
-    generate_and_place_batch(generator, lib, coord_to_pos_basic, 100, 100,
-                             additional_drawings=additional_text, thread_count=os.cpu_count())
+    generate_and_place_batch(generator, lib, 100, 100, coordinate_to_position_func=coord_to_pos_basic,
+                             additional_drawings=additional_text, thread_count=os.cpu_count(),
+                             data_format=encode_actual_position)
     print(f"Done generating! Took {time.time()-start:.2f} seconds.")
     lib.write_gds("test_qr_code_parallel.gds")
     gdspy.LayoutViewer(lib)

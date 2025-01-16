@@ -123,14 +123,21 @@ def grid(num_lines, reduction):
         block.add(Vline)
     return block
 
+def format_relative(x,y, _, __):
+    return f"{x},{y}"
+
+def format_absolute(_, __, x_actual, y_actual):
+    return f"{x_actual},{y_actual}"
+
 def main():
     # size in um of module and offset
     global module_size
     global offset
     # creates a new cell objet in the lib library
     qr = lib.new_cell("QR")
-
-    name, length, height, qr_size, spacing, abs_pos = input_data()
+    data = input_data()
+    print(data)
+    name, length, height, qr_size, spacing, abs_pos = data
     print(name, length, height, qr_size, spacing)
     global padding, hum_text, reduction, precision
     padding, hum_text, reduction, precision = default_overides(qr_size)
@@ -144,15 +151,19 @@ def main():
     print(rel_spacing)
     # make_grid(qrs_in_row, qrs_in_col, qr, rel_spacing, qr_size)
     # lib = gdspy.GdsLibrary()
+    format_func = format_relative
+
     measurement = units.Measurement.unitless
     if abs_pos:
+        format_func=format_absolute
         measurement = units.Measurement.micrometer
 
     generator = GDSIIQRGenerator(qr_size,library = lib, unit = measurement, reduction = reduction)
     start=time.time()
     print(os.cpu_count())
-    generate_and_place_batch(generator, lib, coord_to_pos_basic, 100, 100,
-                         additional_drawings=additional_text, thread_count=os.cpu_count())
+    generate_and_place_batch(generator, lib, 100, 100, coordinate_to_position_func=coord_to_pos_basic,
+                         additional_drawings=additional_text, thread_count=os.cpu_count(),
+                             data_format=format_func)
     print(f"Done generating! Took {time.time()-start:.2f} seconds.")
     lib.write_gds("test_qr_code_parallel.gds")
     gdspy.LayoutViewer(lib)

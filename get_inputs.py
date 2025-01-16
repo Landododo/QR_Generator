@@ -125,7 +125,7 @@ def default_overides(qr_size):
         field_values[4] = int(field_values[4])
     else:
         field_values[4] = None
-    return (field_values[0], field_values[1].upper() == "Y", field_values[2], field_values[3], field_values[4],field_values[5])
+    return field_values[0], field_values[1].upper() == "Y", field_values[2], field_values[3], field_values[4], field_values[5]
 
 def adjust_qr_size_and_padding(length, height, qr_size, padding, no_size, forced_version, ec_level, abs_pos):
     if no_size:
@@ -146,7 +146,7 @@ def adjust_qr_size_and_padding(length, height, qr_size, padding, no_size, forced
             if forced_version == version:
                 if capacity < needed:
                     raise ValueError(
-                        f"Version {version}, EC level: {self.error_correction} can only"
+                        f"Version {version}, EC level: {ec_level} can only"
                         f"store {capacity} characters, needed {needed} characters."
                         f"You can avoid providing the qr_version argument to autofit.")
                 qr_version = forced_version

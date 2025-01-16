@@ -2,7 +2,7 @@ import gdspy, numpy, os, json, sys
 from subprocess import check_output
 from get_inputs import *
 from QR_GDSII.QR_Code_Generator import GDSIIQRGenerator
-from QR_GDSII.QRWorker import generate_and_place_batch, round_floats
+from QR_GDSII.QRWorker import generate_and_place_batch
 from QR_GDSII.util import units
 from QR_GDSII import QRWorker
 import time
@@ -15,6 +15,17 @@ class ENCODING:
         col_bits = 8
         checksum_bits = 3
         n = 25
+
+# =======================================
+# Payload Formatting
+# =======================================
+def format_relative(x,y, _, __):
+    return f"{x},{y}"
+
+def format_absolute(_, __, x_actual, y_actual):
+    return f"{x_actual:.3f},{y_actual:.3f}"
+
+
 global padding, qr_size, spacing
 #add command line arguments and usage note
 def additional_text(qr_size, x,y, cell: gdspy.Cell, pos_x, pos_y, **kwargs):
@@ -67,8 +78,12 @@ def main():
         pos_y = padding + (y + 1) * (qr_size + spacing) - spacing
         return pos_x,pos_y
     measurement = units.Measurement.unitless
+
+    format_func = format_relative
+
     if abs_pos:
         measurement = units.Measurement.micrometer
+        format_func = format_absolute
     human_text = None
     if hum_text:
         human_text = additional_text
@@ -76,8 +91,8 @@ def main():
     generator = GDSIIQRGenerator(qr_size,library = lib, unit = measurement, reduction = reduction)
     start=time.time()
     print(os.cpu_count())
-    generate_and_place_batch(generator, lib, coord_to_pos, qrs_in_row, qrs_in_col,
-                         additional_drawings=human_text, thread_count=os.cpu_count(), data_format=round_floats)
+    generate_and_place_batch(generator, lib, qrs_in_row, qrs_in_col, coordinate_to_position_func=coord_to_pos,
+                         additional_drawings=human_text, thread_count=os.cpu_count(), data_format=format_func)
     print(f"Done generating! Took {time.time()-start:.2f} seconds.")
     path = ''
     i = 0
@@ -85,7 +100,7 @@ def main():
     while True:
         # generates a unique file name
         if i:  # Only apply to i > 0
-            fname = '%s_%i'%(fnameBase,i)
+            fname = '%s (%i)'%(fnameBase,i)
         else:
             fname = fnameBase
         if not os.path.exists(os.path.join(path,fname+'.gds')):
