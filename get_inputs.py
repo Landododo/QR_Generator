@@ -8,7 +8,7 @@ def input_data():
     and standardize it to return only essential information"""
     # collect all the input info
     title = "QR generator"
-    msg = "Enter the specifications of the QR generation. Sizes are in um and should be depicted (length x height). Leave blank if want us to generat data."
+    msg = "Enter the specifications of the QR generation. Sizes are in um and should be depicted (length x height). Leave blank if want us to generate data."
     field_names = ["File name", "QR array size", "QR code length", "QR code spacing", "Size of chip"]
     field_values = []
     field_values = multenterbox(msg, title, field_names)
