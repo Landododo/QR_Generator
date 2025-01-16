@@ -12,7 +12,6 @@ def input_data():
     field_names = ["File name", "QR array size", "QR code length", "QR code spacing", "Size of chip"]
     field_values = []
     field_values = multenterbox(msg, title, field_names)
-    print(field_values)
     array1 = []
     array2 = []
     while True:
@@ -58,10 +57,9 @@ def input_data():
     # boolean question to determine type of information to be encoded in QR codes
     if not boolbox("Should position be encoded in um or unitless relative to QR size?", "QR units", ["Absolute Position (um)", "Relative Position (QR units)"]):
         abs_pos = False
-    print(abs_pos)
     
     if field_values[1] == []:
-        return(field_values[0], field_values[4][0], field_values[4][1], field_values[2], field_values[3], abs_pos, False)
+        return(field_values[0], field_values[4][0], field_values[4][1], field_values[2], field_values[3], abs_pos, False, False)
     elif str(field_values[2]).strip() == "" or str(field_values[3]).strip() == "":
         qrs_per_row = field_values[1][0]
         qrs_per_col = field_values[1][1]
@@ -70,7 +68,7 @@ def input_data():
         if str(field_values[2]).strip() == "":
             spacing = field_values[3]
             code_length = min((chip_size_length - (qrs_per_row - 1) * spacing)/qrs_per_row, (chip_size_height - (qrs_per_col - 1) * spacing)/qrs_per_col)
-            return (field_values[0], chip_size_length, chip_size_height, code_length, field_values[3],abs_pos, False)
+            return (field_values[0], chip_size_length, chip_size_height, code_length, field_values[3],abs_pos, False, False)
         else:
             code_length = field_values[2]
             spacing = 0
@@ -80,17 +78,15 @@ def input_data():
                 spacing = (chip_size_height - qrs_per_col * code_length) / (qrs_per_col - 1)
             elif qrs_per_row != 1:
                 spacing = (chip_size_length - qrs_per_row * code_length) / (qrs_per_row - 1)
-            print(spacing)
-            print("fucks")
-            return (field_values[0], chip_size_length, chip_size_height, code_length, spacing, abs_pos, False)
+            return (field_values[0], chip_size_length, chip_size_height, code_length, spacing, abs_pos, False, True)
     elif field_values[4] == []:
         code_length = field_values[2]
         spacing = field_values[3]
         length = field_values[1][0] * (code_length + spacing) - spacing
         height = field_values[1][1] * (code_length + spacing) - spacing
-        return(field_values[0], length, height, code_length, spacing, abs_pos, True)
+        return(field_values[0], length, height, code_length, spacing, abs_pos, True, False)
     else:
-        return(field_values[0], field_values[4][0], field_values[4][1], field_values[2], field_values[3],abs_pos, False)
+        return(field_values[0], field_values[4][0], field_values[4][1], field_values[2], field_values[3],abs_pos, False, False)
 
 def default_overides(qr_size):
     title = "Default overrides"
@@ -127,13 +123,15 @@ def default_overides(qr_size):
         field_values[4] = None
     return field_values[0], field_values[1].upper() == "Y", field_values[2], field_values[3], field_values[4], field_values[5]
 
-def adjust_qr_size_and_padding(length, height, qr_size, padding, no_size, forced_version, ec_level, abs_pos):
+def adjust_qr_size_and_padding(length, height, qr_size, padding, no_size, forced_version, ec_level, abs_pos, qrs_per_row, qrs_per_col, spacing, no_spacing):
     if no_size:
         length = length + 2 * padding
         height = height + 2 * padding
     needed = 7
     if abs_pos:
         needed = 13
+    if no_spacing and padding != 0 and qrs_per_row !=1 and qrs_per_col !=1:
+        spacing = min(spacing - 2 * padding / (qrs_per_row - 1), spacing - 2 * padding / (qrs_per_col-1))
     capacities_table = constants.QRCapacitiesToVersions[ec_level]
     qr_version = forced_version
 
@@ -150,9 +148,16 @@ def adjust_qr_size_and_padding(length, height, qr_size, padding, no_size, forced
                         f"store {capacity} characters, needed {needed} characters."
                         f"You can avoid providing the qr_version argument to autofit.")
                 qr_version = forced_version
-    return (length, height, qr_version * 4 + 17)
+    return (length, height, qr_version * 4 + 17, spacing)
 
 def get_parser_inputs():
+    """Gets the necessary user inputs through an argument parser,
+    with it requiring 4 arguments and also accepting other arguments
+    if you want to change the arguments from their default values.
+    Returnsall necessary variables, with some being calculated, some being
+    set to default values if not given an input, and others coming directly
+    from the inputs in the command line. Includes some error detection print statements
+    but otherwise you will get a type error for entering the wrong type into the command line."""
     parser = argparse.ArgumentParser(
             prog='QR generator',
             description='Generates a grid of qr codes of a specifized size using user input. Returns a gdsii file'
@@ -176,9 +181,9 @@ def get_parser_inputs():
         if len(args_dict["filename"]) < 1:
             print("Error: need a filename")
         elif "x" not in args_dict["size of chip"]:
-            print("u need an x between the length and width (no spaces)")
+            print("You need an x between the length and width (no spaces)")
         elif len(args_dict["size of chip"].split("x")) != 2:
-            print("u need 2 dimensions on each side of the x")
+            print("You need 2 dimensions on each side of the x")
         else:
             sizes = args_dict["size of chip"].split("x")
             args_dict["size of chip"] = sizes
@@ -188,7 +193,7 @@ def get_parser_inputs():
                 try:
                     padding = float(args.padding)
                 except:
-                    print("Bruh you need to put in a float for the padding")
+                    print("You need to put in a float for the padding")
                     no_errors = False
             else:
                 padding = 0.1
@@ -197,7 +202,7 @@ def get_parser_inputs():
                     precision = float(args.precision)
                 except:
                     no_errors=False
-                    print("Bruh you need to put in a float for the padding")
+                    print("You need to put in a float for the padding")
             else:
                 precision = 0.001
             if args.reduction != None:
@@ -205,13 +210,13 @@ def get_parser_inputs():
                     reduction = float(args.reduction)
                 except:
                     no_errors=False
-                    print("Bruh you need to put in a float for the reduction")
+                    print("You need to put in a float for the reduction")
             else:
                 reduction = qr_size/200
             if args.human != None:
                 if len(args.human) != 1:
                     no_errors=False
-                    print("there's gotta be only 1 char for human y or n")
+                    print("There's gotta be only 1 char for human y or n")
                 elif args.human not in "nNyY":
                     no_errors =False
                     print("you gotta be y or n")
@@ -222,7 +227,7 @@ def get_parser_inputs():
             if args.ec_level != None:
                 if len(args.ec_level) != 1:
                     no_errors=False
-                    print("there's gotta be only 1 char for L,M,Q,or H")
+                    print("There's gotta be only 1 char for L,M,Q,or H")
                 elif args.ec_level not in "LMQH":
                     no_errors=False
                     print("you gotta be L,M,Q, or H")
