@@ -92,7 +92,7 @@ def default_overides(qr_size):
     title = "Default overrides"
     msg = "These values are filled with default values but can be changed if wanted."
     field_names = ["Outer Padding (um)", "Human Text (Y/N)", "Reduction around each module(um)", "Write Precision (um)", "QR version", "Error Correction"]
-    field_values = [0.1, "Y", 0, .0001, "Any", "M"]
+    field_values = [0, "Y", 0, .0001, "Any", "M"]
     field_values = multenterbox(msg, title, field_names, field_values)
     while True:
         if field_values == None:
@@ -196,7 +196,7 @@ def get_parser_inputs():
                     print("You need to put in a float for the padding")
                     no_errors = False
             else:
-                padding = 0.1
+                padding = 0
             if args.precision != None:
                 try:
                     precision = float(args.precision)
