@@ -27,7 +27,7 @@ The following Python libraries are required:
 ---
 
 ## **Usage**
-The script can accept arguments through the command line or prompt the user for inputs interactively (when given no command line arguments). 
+The script can accept arguments through the command line or prompt the user for inputs interactively (when given no command line arguments). Run QR_gen_new to start the generator.
 
 ### **Command-Line Arguments**
 The command line requires 4 arguments, and has 6 optional arguments that can be enabled using -arg_name before their input. Use -h for help in the program.
