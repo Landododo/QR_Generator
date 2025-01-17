@@ -15,14 +15,15 @@ This project is a Python-based application designed to generate and position a g
 
 ## **Dependencies**
 The following Python libraries are required:
-- `gdspy`: For GDSII file handling and manipulation.
-- `numpy`: For numerical operations.
-- `json`: For parsing and managing configuration files.
-- `os`: For file path management.
-- `sys`: For command-line argument handling.
-- `subprocess`: To execute external commands.
-- `time`: For execution timing.
-- `math`: For geometric computations.
+- `qrcode`: Version ~=8.0
+- `gdspy`: Version ~=1.6.13
+- `coverage`: Version ~=7.6.1
+- `easygui`: Version ~=0.98.3
+- `numpy`: Version ~=2.2.1
+- `ldap3`: Version ~=2.9.1
+- `multiprocess`: Version ~=0.70.17
+- `argparse`: Version ~=1.4.0
+
 ---
 
 ## **Usage**
@@ -65,11 +66,3 @@ The script generates a `.gds` file with the specified QR code layout. The file i
 The application leverages multi-threading to efficiently handle large grid layouts, ensuring quick generation even for complex designs.
 
 ---
-
-
-## **License**
-This project is licensed under the MIT License. See the LICENSE file for details.
-
----
-
-Feel free to edit this file to align it with the specific objectives and context of your project.
