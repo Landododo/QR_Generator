@@ -1,5 +1,4 @@
-import gdspy, numpy, os, json, sys
-from subprocess import check_output
+import gdspy, numpy, os, sys
 from get_inputs import *
 from QR_GDSII.QR_Code_Generator import GDSIIQRGenerator
 from QR_GDSII.QRWorker import generate_and_place_batch
@@ -48,7 +47,7 @@ def main():
         name, length, height, qr_size, spacing, abs_pos, padding, num_modules_long, precision ,hum_text, reduction, ec_level = get_parser_inputs()
         qrs_in_row = int(round((length + spacing) / (qr_size + spacing), 5))
         qrs_in_col = int(round((height + spacing) / (qr_size + spacing), 5))
-        length, height, num_modules_long, spacing = adjust_qr_size_and_padding(length, height, qr_size, padding, False, None, ec_level, abs_pos, qrs_in_row, qrs_in_col, spacing, False)
+        length, height, num_modules_long, spacing = adjust_qr_size_and_padding(length, height, padding, False, None, ec_level, abs_pos, qrs_in_row, qrs_in_col, spacing, False)
     else:
         name, length, height, qr_size, spacing, abs_pos, no_size, no_spacing = input_data()
         padding, hum_text, reduction, precision, forced_version, error_correction = default_overides(qr_size)
@@ -57,7 +56,7 @@ def main():
         print(length, height, spacing, padding, qr_size)
         print(qrs_in_col)
 
-        length, height, num_modules_long, spacing = adjust_qr_size_and_padding(length, height, qr_size, padding, no_size, forced_version, error_correction, abs_pos, qrs_in_row, qrs_in_col, spacing, no_spacing)
+        length, height, num_modules_long, spacing = adjust_qr_size_and_padding(length, height, padding, no_size, forced_version, error_correction, abs_pos, qrs_in_row, qrs_in_col, spacing, no_spacing)
     module_size = qr_size / num_modules_long
     lib.precision = 1.0e-6 * precision
     offset = module_size + .5 # size of module + a small amount for offset

@@ -92,7 +92,7 @@ def default_overides(qr_size):
     title = "Default overrides"
     msg = "These values are filled with default values but can be changed if wanted."
     field_names = ["Outer Padding (um)", "Human Text (Y/N)", "Reduction around each module(um)", "Write Precision (um)", "QR version", "Error Correction"]
-    field_values = [0.1, "Y", qr_size / 200, .00005, "Any", "M"]
+    field_values = [0.1, "Y", 0, .0001, "Any", "M"]
     field_values = multenterbox(msg, title, field_names, field_values)
     while True:
         if field_values == None:
@@ -123,7 +123,7 @@ def default_overides(qr_size):
         field_values[4] = None
     return field_values[0], field_values[1].upper() == "Y", field_values[2], field_values[3], field_values[4], field_values[5]
 
-def adjust_qr_size_and_padding(length, height, qr_size, padding, no_size, forced_version, ec_level, abs_pos, qrs_per_row, qrs_per_col, spacing, no_spacing):
+def adjust_qr_size_and_padding(length, height, padding, no_size, forced_version, ec_level, abs_pos, qrs_per_row, qrs_per_col, spacing, no_spacing):
     if no_size:
         length = length + 2 * padding
         height = height + 2 * padding
@@ -204,7 +204,7 @@ def get_parser_inputs():
                     no_errors=False
                     print("You need to put in a float for the padding")
             else:
-                precision = 0.001
+                precision = 0.0001
             if args.reduction != None:
                 try:
                     reduction = float(args.reduction)
@@ -212,7 +212,7 @@ def get_parser_inputs():
                     no_errors=False
                     print("You need to put in a float for the reduction")
             else:
-                reduction = qr_size/200
+                reduction = 0
             if args.human != None:
                 if len(args.human) != 1:
                     no_errors=False
@@ -228,11 +228,11 @@ def get_parser_inputs():
                 if len(args.ec_level) != 1:
                     no_errors=False
                     print("There's gotta be only 1 char for L,M,Q,or H")
-                elif args.ec_level not in "LMQH":
+                elif args.ec_level not in "LMQHlmqh":
                     no_errors=False
                     print("you gotta be L,M,Q, or H")
                 else:
-                    args.ec_level = "M"
+                    args.ec_level = args.ec_level.upper()
             else:
                 args.ec_level = "M"
             if args.absolute != None:
