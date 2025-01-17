@@ -9,7 +9,7 @@ This project is a Python-based application designed to generate and position a g
 ## **Features**
 - Generates QR codes in GDSII format with customizable size, spacing, and encoding, along with other parameters, automatically adjusting the qr size and layout based on user input.
 - Supports human-readable labels near QR codes for better identification.
-- Multi-threaded QR code generation for improved performance.
+- Multi-processing QR code generation for improved performance.
 
 ---
 
@@ -65,6 +65,6 @@ The script generates a `.gds` file with the specified QR code layout. The file i
 ---
 
 ## **Performance**
-The application leverages multi-threading to efficiently handle large grid layouts, ensuring quick generation even for complex designs.
+The application leverages multi-processing to efficiently handle large grid layouts, ensuring quick generation even for complex designs.
 
 ---
