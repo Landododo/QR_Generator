@@ -29,8 +29,8 @@ global padding, qr_size, spacing
 #add command line arguments and usage note
 def additional_text(qr_size, x,y, cell: gdspy.Cell, pos_x, pos_y, **kwargs):
     """Creates human text around each qr code"""
-    x_label = gdspy.Text(str(x), size=10, position=(pos_x, pos_y+qr_size * 1.05), layer=2, **kwargs)
-    y_label = gdspy.Text(str(y), size=10, position=(pos_x+qr_size * 1.05 + 10, pos_y), angle=math.pi/2, layer=2, **kwargs)
+    x_label = gdspy.Text(str(x), size=qr_size / 10, position=(pos_x, pos_y+qr_size * 1.05), layer=2, **kwargs)
+    y_label = gdspy.Text(str(y), size=qr_size/10, position=(pos_x+qr_size * 1.15, pos_y), angle=math.pi/2, layer=2, **kwargs)
     cell.add((x_label, y_label))
 
 def main():
